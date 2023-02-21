@@ -6,6 +6,9 @@
 
 - [Introduction to Sever Sent Events](#introduction-to-sever-sent-events)
 - [Why do we need server sent events?](#why-do-we-need-server-sent-events)
+- [Implementation](#implementation)
+- [Explanation](#explanation)
+- [Conclusion](#conclusion)
 
 # Introduction to Sever Sent Events
 
@@ -16,6 +19,7 @@
     - Now when the browser has the IP address, it goes to that webserver and requests the data present on that website.
 
     - The web server responds to your requests by sending you the HTML, CSS and JavaScript page which your browser renders.
+  
     - Finally you see the web page.
 
 > So this is how the web works, you request for some data(different form) and the web server sends you the response
@@ -61,6 +65,87 @@
        5. Build on top of HTTP 
 
 > There are also some disadvantages as well like the client must be online, and it may not able be handle the data. As it uses HTTP/1.1  it can only make 6 connection at a time.
+
+<br>
+
+# Implementation
+
+<br>
+
+> To run a demo application -- fire up your code editor and run node index.js
+
+```JavaScript
+
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+//   res.setHeader("Content-Type", "text/event-stream");
+  res.send("hello!");
+});
+
+app.get("/stream", (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:4000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Send the SSE stream
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    });
+  send(res);
+});
+const port = process.env.PORT || 4000;
+
+let i = 0;
+function send(res) {
+  res.write("data: " + `hello from server sent events ---- [${i++}]\n\n`);
+
+  setTimeout(() => send(res), 1000);
+}
+
+app.listen(port);
+console.log(`Listening on ${port}`);
+```
+
+# Explanation
+
+> This is simple code which in JavaScript which uses express package to create server and send SSE events to clients.
+
+<br>
+
+
+- When the client requests **/stream** route, the server sends continuos SSE stream of messages to the client.
+- I have used **res.setHeader** to set the header to avoid cors policy blocking.
+- Next I have set up the content type header with **res.writeHead** which sets up the response header.
+- Then I have called the **send** function and it is being called every 1 second with the response object.
+- The function send takes the response object and writes a message to SSE stream every second.
+- **app.listen()** method will start the server on the specified port (4000).
+
+<br>
+
+> - Next we have the client side code which is just creating object for EventSource and connect to server.
+> - we have set up **onmessage** event listener which console logs on every time it receive a message from the server.
+
+```JavaScript
+let serverSendEvents = new EventSource("http://localhost:4000/stream");
+serverSendEvents.onmessage = console.log;
+```
+
+![Screenshot--1328-](/content/images/2023/02/Screenshot--1328-.png)
+
+![Screenshot--1329-](/content/images/2023/02/Screenshot--1329-.png)
+
+![Screenshot--1330-](/content/images/2023/02/Screenshot--1330-.png)
+
+# Conclusion
+
+> Server-Sent Events is a useful technology for web applications that is useful in providing the clients with  real-time updates or notifications. It allows the server to push updates to the client without the need for constant polling, which improves performance, reduces latency, and increases scalability.
+
+
+
+
 
 
 [def]: #introduction-to-sever-sent-events
